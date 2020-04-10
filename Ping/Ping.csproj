@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ping.FSharp\Ping.FSharp.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="hosts.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

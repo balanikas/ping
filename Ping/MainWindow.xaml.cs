@@ -5,8 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
+using Ping.FSharp;
 using Path = System.IO.Path;
 
 namespace Ping
@@ -31,25 +33,29 @@ namespace Ping
             Process.Start("notepad.exe", Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
         }
 
-        CancellationTokenSource Run(ConcurrentDictionary<Uri, PingableEntry> entries)
+        CancellationTokenSource Run(ConcurrentDictionary<PingableEntry, PingResponse> entries)
         {
             var cts = new CancellationTokenSource();
-            foreach (var (uri, entry) in entries)
+            foreach (var (entry, _) in entries)
             {
-                Task.Run(() => 
+                Task.Run(() =>
                 {
+                    var httpClient = new HttpClient {BaseAddress = entry.Host};
                     while (true)
                     {
                         cts.Token.ThrowIfCancellationRequested();
 
-                        var pingResponse = PingHostWithHttpClient(entry);
-
-                        entries[uri].ResponseTime = pingResponse.ResponseTime;
-                        entries[uri].StatusCode = pingResponse.StatusCode;
-
+                        entries[entry] = Helpers.Ping(httpClient);
+                       
                         Dispatcher.Invoke(() =>
                         {
-                            dataGrid1.ItemsSource = entries.Values.OrderBy(x => x.Host.AbsoluteUri);
+                            dataGrid1.ItemsSource = entries.Select(x => new
+                            {
+                                x.Key.Host,
+                                x.Key.Name,
+                                x.Value.StatusCode,
+                                x.Value.ResponseTime
+                            }).OrderBy(x => x.Host);
                         });
 
                         cts.Token.ThrowIfCancellationRequested();
@@ -61,31 +67,10 @@ namespace Ping
             return cts;
         }
 
-        async Task<ConcurrentDictionary<Uri, PingableEntry>> ReadAsync()
+        async Task<ConcurrentDictionary<PingableEntry, PingResponse>> ReadAsync()
         {
             var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
-            var entries = raw.Where(s => !string.IsNullOrWhiteSpace(s)).Select(x => new PingableEntry(
-                new Uri(x.Split(" ").First()), 
-                x.Remove(0, x.IndexOf(' ') + 1)));
-
-            return new ConcurrentDictionary<Uri, PingableEntry>(entries.ToDictionary(
-                x => x.Host,
-                x => x)); 
-        }
-
-        PingResponse PingHostWithHttpClient(PingableEntry entry)
-        {
-            var watch = Stopwatch.StartNew();
-
-            try
-            {
-                var response = entry.Client.GetAsync("", HttpCompletionOption.ResponseHeadersRead).Result;
-                return new PingResponse {ResponseTime = watch.ElapsedMilliseconds, StatusCode = response.StatusCode};
-            }
-            catch (Exception)
-            {
-                return new PingResponse { ResponseTime = watch.ElapsedMilliseconds};
-            }
+            return Helpers.ParseHosts(raw);
         }
 
         void Watch()

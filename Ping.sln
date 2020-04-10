@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ping", "Ping\Ping.csproj", "{BD515858-71FB-4881-9FEE-4311BFB07DA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ping", "Ping\Ping.csproj", "{BD515858-71FB-4881-9FEE-4311BFB07DA8}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ping.FSharp", "Ping.FSharp\Ping.FSharp.fsproj", "{829B3AF2-329F-4FD9-8024-D0F347B98CDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{BD515858-71FB-4881-9FEE-4311BFB07DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD515858-71FB-4881-9FEE-4311BFB07DA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD515858-71FB-4881-9FEE-4311BFB07DA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{829B3AF2-329F-4FD9-8024-D0F347B98CDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{829B3AF2-329F-4FD9-8024-D0F347B98CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{829B3AF2-329F-4FD9-8024-D0F347B98CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{829B3AF2-329F-4FD9-8024-D0F347B98CDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
