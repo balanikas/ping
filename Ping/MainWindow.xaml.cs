@@ -16,6 +16,7 @@ namespace Ping
     public partial class MainWindow : Window
     {
         CancellationTokenSource _cts = new CancellationTokenSource();
+        readonly string _filePath = Path.Combine(Environment.CurrentDirectory, "hosts.txt");
 
         public MainWindow()
         {
@@ -25,47 +26,25 @@ namespace Ping
 
         async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
-            _cts = Run(Helpers.ParseHosts(raw));
+            var raw = await File.ReadAllLinesAsync(_filePath);
+            var entries = Helpers.ParseHosts(raw);
+            _cts = Helpers.Run(entries, UpdateUi );
         }
 
         void Button_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("notepad.exe", Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
+            Process.Start("notepad.exe", _filePath);
         }
 
-        CancellationTokenSource Run(ConcurrentDictionary<PingableEntry, PingResponse> entries)
+        object UpdateUi(ConcurrentDictionary<PingableEntry, PingResponse> entries)
         {
-            var cts = new CancellationTokenSource();
-            foreach (var (entry, _) in entries)
+            return Dispatcher.Invoke(() => dataGrid1.ItemsSource = entries.OrderBy(x => x.Key.Host.AbsoluteUri).Select(x => new
             {
-                Task.Run(() =>
-                {
-                    var httpClient = new HttpClient {BaseAddress = entry.Host};
-                    while (true)
-                    {
-                        cts.Token.ThrowIfCancellationRequested();
-
-                        entries[entry] = Helpers.Ping(httpClient);
-                       
-                        Dispatcher.Invoke(() =>
-                        {
-                            dataGrid1.ItemsSource = entries.OrderBy(x => x.Key.Host.AbsoluteUri).Select(x => new
-                            {
-                                x.Key.Host,
-                                x.Key.Name,
-                                x.Value.StatusCode,
-                                x.Value.ResponseTime
-                            });
-                        });
-
-                        cts.Token.ThrowIfCancellationRequested();
-                        Thread.Sleep(1000);
-                    }
-                }, cts.Token);
-            }
-
-            return cts;
+                x.Key.Host,
+                x.Key.Name,
+                x.Value.StatusCode,
+                x.Value.ResponseTime
+            }));
         }
 
         void Watch()
@@ -80,11 +59,12 @@ namespace Ping
 
             watch.Changed += async (o, args) =>
             {
-                if (args.FullPath != Path.Combine(Environment.CurrentDirectory, "hosts.txt")) return;
+                if (args.FullPath != _filePath) return;
 
                 _cts.Cancel();
-                var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
-                _cts = Run(Helpers.ParseHosts(raw));
+                var raw = await File.ReadAllLinesAsync(_filePath);
+                var entries = Helpers.ParseHosts(raw);
+                _cts = Helpers.Run(entries, UpdateUi );
             };
         }
     }
