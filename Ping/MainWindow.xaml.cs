@@ -25,7 +25,8 @@ namespace Ping
 
         async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _cts = Run(await ReadAsync());
+            var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
+            _cts = Run(Helpers.ParseHosts(raw));
         }
 
         void Button_Click(object sender, RoutedEventArgs e)
@@ -49,28 +50,22 @@ namespace Ping
                        
                         Dispatcher.Invoke(() =>
                         {
-                            dataGrid1.ItemsSource = entries.Select(x => new
+                            dataGrid1.ItemsSource = entries.OrderBy(x => x.Key.Host.AbsoluteUri).Select(x => new
                             {
                                 x.Key.Host,
                                 x.Key.Name,
                                 x.Value.StatusCode,
                                 x.Value.ResponseTime
-                            }).OrderBy(x => x.Host);
+                            });
                         });
 
                         cts.Token.ThrowIfCancellationRequested();
-                        Thread.Sleep(2000);
+                        Thread.Sleep(1000);
                     }
                 }, cts.Token);
             }
 
             return cts;
-        }
-
-        async Task<ConcurrentDictionary<PingableEntry, PingResponse>> ReadAsync()
-        {
-            var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
-            return Helpers.ParseHosts(raw);
         }
 
         void Watch()
@@ -83,12 +78,13 @@ namespace Ping
                 EnableRaisingEvents = true
             };
 
-            watch.Changed += (o, args) =>
+            watch.Changed += async (o, args) =>
             {
                 if (args.FullPath != Path.Combine(Environment.CurrentDirectory, "hosts.txt")) return;
 
                 _cts.Cancel();
-                _cts = Run(ReadAsync().Result);
+                var raw = await File.ReadAllLinesAsync(Path.Combine(Environment.CurrentDirectory, "hosts.txt"));
+                _cts = Run(Helpers.ParseHosts(raw));
             };
         }
     }
