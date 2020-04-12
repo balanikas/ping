@@ -7,7 +7,23 @@
         mc:Ignorable="d"
         Title="Ping" Height="544" Width="569" Loaded="Window_Loaded" WindowStyle="ToolWindow">
     <Grid>
-        <DataGrid Name="dataGrid1" IsReadOnly="True" Margin="0,39,0,0"  >
+        <DataGrid AutoGenerateColumns="False" Name="dataGrid1" IsReadOnly="True" Margin="0,39,0,0"  >
+
+            <DataGrid.Columns>
+                <DataGridHyperlinkColumn Binding="{Binding Host}" Header="Host">
+                    <DataGridHyperlinkColumn.ElementStyle>
+                        <Style>
+                            <EventSetter Event="Hyperlink.Click" Handler="EventSetter_OnHandler"/>
+                        </Style>
+                    </DataGridHyperlinkColumn.ElementStyle>
+                </DataGridHyperlinkColumn>
+                <DataGridTextColumn Binding="{Binding Name}" Header="Name">
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding StatusCode}" Header="StatusCode">
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding ResponseTime}" Header="ResponseTime">
+                </DataGridTextColumn>
+            </DataGrid.Columns>
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Style.Triggers>

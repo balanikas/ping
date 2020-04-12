@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\source\ping" t="IncludeFlat">
+      <e p="packages" t="ExcludeRecursive" />
+      <e p="ping" t="IncludeRecursive">
+        <e p="App.xaml" t="Include" />
+        <e p="App.xaml.cs" t="Include" />
+        <e p="AssemblyInfo.cs" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="hosts.txt" t="Include" />
+        <e p="MainWindow.xaml" t="Include" />
+        <e p="MainWindow.xaml.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp3.1" t="Include">
+              <e p="App.g.cs" t="Include" />
+              <e p="MainWindow.g.cs" t="Include" />
+              <e p="Ping.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="Ping.csproj" t="IncludeRecursive" />
+      </e>
+      <e p="Ping.FSharp" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Helpers.fs" t="Include" />
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="Ping.FSharp.fsproj" t="IncludeRecursive" />
+        <e p="Types.fs" t="Include" />
+      </e>
+      <e p="Ping.sln" t="IncludeFlat" />
+    </e>
+    <e p="C:\Users\c_bal\.Rider2019.3\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\c_bal\.Rider2019.3\system\resharper-host\local\Transient\ReSharperHost\v193\SolutionCaches\_Ping.841315572.00" t="ExcludeRecursive" />
+  </component>
+</project>

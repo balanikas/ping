@@ -6,21 +6,33 @@ open Microsoft.FSharp.Control
 open System.Linq
 open Ping.FSharp
 open System.Collections.Concurrent
+open System.Collections.Generic
+open System.Collections.Generic
 open System.Net.Http
 open System.Diagnostics
 open System.Threading
 open System.Threading.Tasks
 
-let ParseHosts (hosts:string[])= 
-    let entries = hosts |> 
-                    Array.filter(fun s -> not(String.IsNullOrWhiteSpace(s))) |> 
-                    Array.map(fun (x:string) -> { 
-                        PingableEntry.Host=new Uri(x.Split(" ").First()); 
-                        Name=x.Remove(0, x.IndexOf(' ') + 1)})
+let NoResponse = {PingResponse.StatusCode = HttpStatusCode.ServiceUnavailable; ResponseTime = -1L}
 
-    let dic = entries.ToDictionary((fun x -> x), 
-                fun _ -> {PingResponse.StatusCode = HttpStatusCode.ServiceUnavailable; ResponseTime = Int64.MinValue})
-    new ConcurrentDictionary<PingableEntry, PingResponse>(dic)
+let ParseHosts (hosts:string[])=
+    
+    let ToPingableEntries (s:string): KeyValuePair<PingableEntry, PingResponse> =
+        KeyValuePair<PingableEntry, PingResponse>(
+            {
+                PingableEntry.Host = Uri(s.Split(" ").First())
+                Name=s.Remove(0, s.IndexOf(' ') + 1)
+            },
+            NoResponse)
+  
+    let entries = hosts |> 
+                    Array.filter(fun s -> not(String.IsNullOrWhiteSpace(s))) |>
+                    Array.map(fun (s:string) -> s.Trim()) |>
+                    Array.filter(fun s -> Uri.IsWellFormedUriString(s.Split(" ").First(), UriKind.Absolute)) |>
+                    Array.map(ToPingableEntries) |>
+                    Seq.distinct 
+
+    ConcurrentDictionary<PingableEntry, PingResponse>(entries)
 
 let Ping(client:HttpClient) = 
     let watch = Stopwatch.StartNew()
@@ -29,11 +41,22 @@ let Ping(client:HttpClient) =
         let response = client.GetAsync("", HttpCompletionOption.ResponseHeadersRead).Result;
         {PingResponse.StatusCode = response.StatusCode; ResponseTime = watch.ElapsedMilliseconds}
     with
-        | _ -> {PingResponse.StatusCode = HttpStatusCode.ServiceUnavailable; ResponseTime = Int64.MinValue}
+        | _ -> NoResponse
 
-type UpdateUiDelegate = delegate of (ConcurrentDictionary<PingableEntry, PingResponse>) -> obj
+type UpdateUiDelegate = delegate of (IEnumerable<Entry>) -> unit
 
-let Run(entries:ConcurrentDictionary<PingableEntry, PingResponse>, updateUi:UpdateUiDelegate) =
+let Run(raw:string[], updateUi:UpdateUiDelegate) =
+    
+    let Project (x:KeyValuePair<PingableEntry, PingResponse>) =
+        {
+            Entry.Host = x.Key.Host
+            Name = x.Key.Name
+            StatusCode = x.Value.StatusCode
+            ResponseTime = x.Value.ResponseTime
+        }
+
+    let entries = ParseHosts raw
+    
     let cts = new CancellationTokenSource()
     
     for e in entries do
@@ -43,8 +66,9 @@ let Run(entries:ConcurrentDictionary<PingableEntry, PingResponse>, updateUi:Upda
             while true do 
                 cts.Token.ThrowIfCancellationRequested()
                 entries.TryUpdate(e.Key, Ping client, entries.[e.Key]) |> ignore
-
-                updateUi.Invoke entries |> ignore
+                
+                let projected = entries.ToArray() |> Array.map Project
+                updateUi.Invoke projected 
 
                 cts.Token.ThrowIfCancellationRequested()
                 Thread.Sleep(1000)

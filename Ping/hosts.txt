@@ -1,3 +1,4 @@
 ﻿
-http://localhost:64621/ local build
+http://localhost:5000/ local asp.net core instance
+http://dailybuild:1234 daily CI/CD
 https://google.com
